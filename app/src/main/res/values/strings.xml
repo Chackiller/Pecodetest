@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Pecode test</string>
+    <string name="create_not">Create new notification</string>
+    <string name="notification">Notification</string>
 </resources>

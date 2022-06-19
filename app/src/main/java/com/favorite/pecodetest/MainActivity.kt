@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,14 +26,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import com.favorite.pecodetest.ui.theme.*
+import com.favorite.pecodetest.view.MainActivityViewModel
 import com.favorite.pecodetest.view.ViewPager
 import com.google.accompanist.pager.ExperimentalPagerApi
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalPagerApi::class)
+    private lateinit var vm: MainActivityViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        vm = ViewModelProvider(this)[MainActivityViewModel::class.java]
         setContent {
             PecodeTestTheme {
                 Column(
@@ -40,7 +45,7 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(backgroundGrey), verticalArrangement = Arrangement.Bottom
                 ) {
-                    BottomToolBar()
+                    BottomToolBar(vm)
                 }
             }
         }
@@ -60,7 +65,7 @@ fun CreateNotification() {
 }
 
 @Composable
-fun BottomToolBar() {
+fun BottomToolBar(viewModel: MainActivityViewModel) {
     Box(modifier = Modifier
         .padding(start = 29.dp, end = 29.dp, bottom = 35.dp)
         .height(56.dp),
@@ -73,7 +78,7 @@ fun BottomToolBar() {
             shape = RoundedCornerShape(44.dp)
         ) {
             Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "0",
+                Text(text = viewModel.numberOfFragments.toString(),
                     textAlign = TextAlign.Center,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
@@ -84,15 +89,15 @@ fun BottomToolBar() {
         Row(horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()) {
-            MinusButton()
-            PlusButton()
+            MinusButton(viewModel)
+            PlusButton(viewModel)
         }
 
     }
 }
 
 @Composable
-fun MinusButton() {
+fun MinusButton(viewModel: MainActivityViewModel) {
     Box(contentAlignment = Alignment.Center) {
         Surface(modifier = Modifier.size(56.dp), shape = CircleShape, color = white, elevation = 10.dp) {
 
@@ -105,8 +110,8 @@ fun MinusButton() {
 }
 
 @Composable
-fun PlusButton() {
-    Box(contentAlignment = Alignment.Center) {
+fun PlusButton(viewModel: MainActivityViewModel) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.clickable { viewModel.numberOfFragments++ }) {
         Surface(modifier = Modifier.size(56.dp), shape = CircleShape, color = white, elevation = 10.dp) {
 
         }

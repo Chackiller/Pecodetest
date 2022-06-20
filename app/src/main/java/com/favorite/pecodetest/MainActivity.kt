@@ -1,5 +1,8 @@
 package com.favorite.pecodetest
 
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,6 +20,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -29,17 +33,19 @@ import com.favorite.pecodetest.view.MainViewModelFactory
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    val CHANNEL_ID: String = "CHANNEL_ID"
     private lateinit var vm: MainActivityViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         vm = ViewModelProvider(
             this,
-            MainViewModelFactory(this)
+            MainViewModelFactory(application, CHANNEL_ID)
         )[MainActivityViewModel::class.java]
-
+        intent.getIntExtra(CHANNEL_ID, 0)
         setContent {
             PecodeTestTheme {
                 Column(
@@ -64,23 +70,19 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    fun createNotification() {
-
-
-//        with(NotificationManagerCompat.from(this)) {
-//            notify(1231, builder.build())
-//        }
-    }
-
-
 }
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun CreateNotificationButton(viewModel: MainActivityViewModel) {
     val pagerState = rememberPagerState(viewModel.numberOfFragments)
+    val scope = rememberCoroutineScope()
+    val intent = (LocalContext.current as MainActivity).intent
+    scope.launch {
+        pagerState.scrollToPage(intent.getIntExtra("CHANNEL_ID", pagerState.currentPage))
+    }
     HorizontalPager(
         modifier = Modifier.fillMaxSize(),
         state = pagerState
@@ -96,7 +98,13 @@ fun CreateNotificationButton(viewModel: MainActivityViewModel) {
                     .clip(CircleShape)
                     .size(166.dp)
                     .align(Alignment.Center)
-                    .clickable { viewModel.createNotification() },
+                    .clickable {
+                        viewModel.createNotification(
+                            "You have created a Notification",
+                            "Notification ${pagerState.currentPage + 1}",
+                            pagerState.currentPage + 1
+                        )
+                    },
                 elevation = 15.dp,
                 shape = CircleShape
             ) {
@@ -158,7 +166,7 @@ fun BottomToolBar(viewModel: MainActivityViewModel) {
 
 @Composable
 fun MinusButton(viewModel: MainActivityViewModel) {
-    viewModel.visible = viewModel.numberOfFragments > 0
+    viewModel.visible = viewModel.numberOfFragments > 1
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier

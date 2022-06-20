@@ -1,7 +1,6 @@
 package com.favorite.pecodetest
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -12,30 +11,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.modifier.modifierLocalOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import com.favorite.pecodetest.ui.theme.*
 import com.favorite.pecodetest.view.MainActivityViewModel
-import com.favorite.pecodetest.view.ViewPager
+import com.favorite.pecodetest.view.MainViewModelFactory
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 
 class MainActivity : ComponentActivity() {
@@ -43,7 +35,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        vm = ViewModelProvider(this)[MainActivityViewModel::class.java]
+        vm = ViewModelProvider(
+            this,
+            MainViewModelFactory(this)
+        )[MainActivityViewModel::class.java]
+
         setContent {
             PecodeTestTheme {
                 Column(
@@ -59,7 +55,8 @@ class MainActivity : ComponentActivity() {
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CreateNotification(vm)
+                        CreateNotificationButton(vm)
+
                     }
 
                     BottomToolBar(vm)
@@ -67,25 +64,39 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    fun createNotification() {
+
+
+//        with(NotificationManagerCompat.from(this)) {
+//            notify(1231, builder.build())
+//        }
+    }
+
+
 }
+
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun CreateNotification(viewModel: MainActivityViewModel) {
-    val pagerState = rememberPagerState(viewModel.numberOfFragments.value)
+fun CreateNotificationButton(viewModel: MainActivityViewModel) {
+    val pagerState = rememberPagerState(viewModel.numberOfFragments)
     HorizontalPager(
         modifier = Modifier.fillMaxSize(),
         state = pagerState
     ) { page ->
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize(),
             contentAlignment = Alignment.CenterStart
         ) {
             Surface(
                 color = circleGrey,
                 modifier = Modifier
+                    .clip(CircleShape)
                     .size(166.dp)
-                    .align(Alignment.Center),
+                    .align(Alignment.Center)
+                    .clickable { viewModel.createNotification() },
                 elevation = 15.dp,
                 shape = CircleShape
             ) {
@@ -124,7 +135,7 @@ fun BottomToolBar(viewModel: MainActivityViewModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = viewModel.numberOfFragments.value.toString(),
+                    text = viewModel.numberOfFragments.toString(),
                     textAlign = TextAlign.Center,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
@@ -147,14 +158,14 @@ fun BottomToolBar(viewModel: MainActivityViewModel) {
 
 @Composable
 fun MinusButton(viewModel: MainActivityViewModel) {
-    viewModel.visible = viewModel.numberOfFragments.value > 0
+    viewModel.visible = viewModel.numberOfFragments > 0
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .clip(CircleShape)
             .alpha(if (viewModel.visible) 1f else 0f)
             .clickable {
-                if (viewModel.visible) viewModel.numberOfFragments.value--
+                if (viewModel.visible) viewModel.deleteElement()
             }) {
 
         Surface(
@@ -181,7 +192,7 @@ fun PlusButton(viewModel: MainActivityViewModel) {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .clip(CircleShape)
-            .clickable { viewModel.numberOfFragments.value++ }) {
+            .clickable { viewModel.addElement() }) {
         Surface(
             modifier = Modifier
                 .size(56.dp),
